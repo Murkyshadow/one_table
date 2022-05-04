@@ -9,118 +9,52 @@ class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
         self.db = DataBase()
-        self.ui = uic.loadUi("forms/shop_table.ui", self)
+        self.ui = uic.loadUi("forms/shop.ui", self)
         self.window().setWindowTitle("Магазин")
         self.ui.btn_add_name.clicked.connect(self.add_shop)
         self.ui.btn_save_data.clicked.connect(self.save_shop_in_db)
-        self.ui.btn_add_product.clicked.connect(self.add_product)
-        self.ui.btn_save_data_product.clicked.connect(self.save_product_in_db)
 
-        # print(self.db.get_shop())
-        self.id_shop.addItems(self.db.get_shop())
-
-        self.draw_shop()
-        self.draw_product()
-
-    def add_product(self):
-        name = self.ui.name_2.text()
-        cost = self.ui.cost.value()
-        id = self.id_shop.currentText()
-        id = id.split(' ')[0]
-        if name != '':
-            self.db.add_in_product(name, cost, id)
-            self.update_draw_product()
-
-    def update_combobox(self):
-        self.id_shop.clear()
-        self.id_shop.addItems(self.db.get_shop())
-
-    def save_product_in_db(self):
-        self.table = self.ui.table_product
-        data = self.get_from_table()
-        for string in data:
-            if string[1]!='':
-                self.db.update_product(string[0], string[1], string[2], string[3])
-            else:
-                self.db.delete_from_product(string[0])
-        self.update_draw_product()
-
-    def save_shop_in_db(self):
         self.table = self.ui.table_shop
+        self.cout_shop()
+
+    def save_shop_in_db(self):  # сохраняем измененные ячейки в БД при нажатии на кнопку
         data = self.get_from_table()
         for string in data:
-            if string[1]!='':
+            if string[1] != '':     # если названия магазина есть, то обновляем данные
                 self.db.update_shop(string[0], string[1], string[2])
-            else:
+            else:                   # если названия магазина нет, то удаляем эту строку
                 self.db.delete_from_shop(string[0])
-        self.update_draw_shop()
-        self.update_draw_product()
-        self.update_combobox()
+        self.cout_shop()
 
-
-    def add_shop(self):
+    def add_shop(self):     # добавляем новый магазин в БД и в таблицу
         name = self.ui.name.text()
         address = self.ui.address.text()
-        if name!= '' and address != '':
+        if name != '' and address != '':
             self.db.add_in_shop(name, address)
-            self.update_draw_shop()
-        self.update_combobox()
+            self.cout_shop()
 
-    def update_draw_shop(self):
-        self.table = self.ui.table_shop
+    def cout_shop(self):
         self.table.clear()
-        self.draw_shop()
-
-    def update_draw_product(self):
-        self.table = self.ui.table_product
-        self.table.clear()
-        self.draw_product()
-
-    def draw_shop(self):
-        self.table = self.ui.table_shop
         rec = self.db.get_from_shop()
-        self.table.setColumnCount(3)
-        i = 0
-        for shop in rec:
-            x = 0
-            self.table.setRowCount(i+1)
-            for field in shop:
+        self.table.setColumnCount(3)        # кол-во столбцов
+        self.table.setRowCount(len(rec))    # кол-во строк
+
+        for i, shop in enumerate(rec):
+            for x, field in enumerate(shop):     # i, x - координаты ячейки, в которую будем записывать текст
                 item = QTableWidgetItem()
-                item.setText(str(field))
-                if x==0: # для id делаем некликабельные ячейки
+                item.setText(str(field))        # записываем текст в ячейку
+                if x == 0:                      # для id делаем некликабельные ячейки
                     item.setFlags(Qt.ItemIsEnabled)
                 self.table.setItem(i, x, item)
-                x += 1
-            i += 1
 
-    def draw_product(self):
-        self.table = self.ui.table_product
-        rec = self.db.get_from_product()
-        self.table.setColumnCount(4)
-        i = 0
-        for shop in rec:
-            x = 0
-            self.table.setRowCount(i+1)
-            for field in shop:
-                item = QTableWidgetItem()
-                item.setText(str(field))
-                if x==0: # для id делаем некликабельные (чтобы их нельзя было переписать) ячейки
-                    item.setFlags(Qt.ItemIsEnabled)
-                self.table.setItem(i, x, item)
-                x += 1
-            i += 1
-
-    def get_from_table(self):
-        rows = self.table.rowCount()
-        cols = self.table.columnCount()
+    def get_from_table(self):       # получаем данные из таблицы, чтобы потом записать их в БД
+        rows = self.table.rowCount()    # получаем кол-во строк таблицы
+        cols = self.table.columnCount() # получаем кол-во столбцов таблицы
         data = []
         for row in range(rows):
             tmp = []
             for col in range(cols):
-                try:
-                    tmp.append(self.table.item(row, col).text())
-                except:
-                    tmp.append('No data')
+                tmp.append(self.table.item(row, col).text())
             data.append(tmp)
         return data
 
@@ -129,6 +63,5 @@ if __name__ == '__main__':
     qapp = QApplication(sys.argv)
     window = MainWindow()
     window.show()
-    # window.draw_shop()
 
     qapp.exec()
