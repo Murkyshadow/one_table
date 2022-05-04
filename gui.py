@@ -38,6 +38,7 @@ class MainWindow(QMainWindow):
         rec = self.db.get_from_shop()
         self.table.setColumnCount(3)        # кол-во столбцов
         self.table.setRowCount(len(rec))    # кол-во строк
+        self.table.setHorizontalHeaderLabels(['id', 'shop', 'address'])     # название колонок таблицы
 
         for i, shop in enumerate(rec):
             for x, field in enumerate(shop):     # i, x - координаты ячейки, в которую будем записывать текст
